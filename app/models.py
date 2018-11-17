@@ -1,4 +1,5 @@
 from . import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model):
     """
@@ -10,7 +11,28 @@ class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String(255))
-    pitch_id = db.Column(db.Integer, db.Foreign_key('pitches.id'))
+    pass_secure = db.Column(db.String(255))
+    pitch_id = db.Column(db.Integer, db.ForeignKey('pitches.id'))
+
+    @property
+    def password(self):
+        """
+        Method that raises an error when a user tries to access the passwords.
+        """
+        raise AttributeError('You cannot read the password attribute')
+
+    @password.setter
+    def password(self, password):
+        """
+        Method that generates hashes for passwords.
+        """
+        self.pass_secure = generate_password_hash(password)
+
+    def verify_password(self, password):
+        """
+        Method that checks if the password hashes are the same.
+        """
+        return check_password_hash(self.pass_secure, password)
 
     def __repr__(self):
         """
