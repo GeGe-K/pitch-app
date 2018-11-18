@@ -1,6 +1,7 @@
 from . import db, login_manager
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
+from datetime import datetime
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -17,13 +18,17 @@ class User(UserMixin, db.Model):
         db.Model - connects our class to the database.
     """
     __tablename__ = 'users'
+
     id = db.Column(db.Integer, primary_key = True)
     username = db.Column(db.String(255), index = True)
+    firstname =db.Column(db.String(255))
+    lastname =db.Column(db.String(255))
     email = db.Column(db.String(255), unique = True, index = True)
-    pitch_id = db.Column(db.Integer, db.ForeignKey('pitches.id'))
     bio = db.Column(db.String(255))
     profile_pic_path = db.Column(db.String())
     pass_secure = db.Column(db.String(255))
+    
+    pitches = db.relationship('Pitch', backref = 'user', lazy = 'dynamic')
 
     @property
     def password(self):
@@ -45,6 +50,13 @@ class User(UserMixin, db.Model):
         """
         return check_password_hash(self.pass_secure, password)
 
+    def get_pitches(self):
+        """
+        Method that gets all pitches for a particular user
+        """
+        user = User.query.filter_by(id = self.id).first()
+        return user.pitches
+
     def __repr__(self):
         """
         Method used for debugging the database.
@@ -59,10 +71,22 @@ class Pitch(db.Model):
         db.Model - connects our class to the database.
     """
     __tablename__ = 'pitches'
+
     id = db.Column(db.Integer, primary_key = True)
-    name = db.Column(db.String(255))
-    description = db.Column(db.String(255))
-    users = db.relationship('User', backref = 'pitch', lazy = 'dynamic')
+    title = db.Column(db.String(255))
+    description = db.Column(db.String(700))
+    category = db.Column(db.String)
+    posted = db.Column(db.DateTime, default=datetime.utcnow)
+    upvotes = db.Column(db.Integer)
+    downvotes = db.Column(db.Integer)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    def save_pitch(self):
+        """
+        Method that saves a pitch to the database
+        """
+        db.session.add(self)
+        db.session.commit()
 
     def __repr__(self):
         """
