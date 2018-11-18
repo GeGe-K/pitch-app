@@ -1,4 +1,8 @@
 {% extends 'bootstrap/base.html' %}
+{%block styles%}
+{{super()}}
+<link rel="stylesheet" href="https://bootswatch.com/4/simplex/bootstrap.min.css">
+{%endblock%}
 
 {%block navbar%}
 {% include 'navbar.html'%}
