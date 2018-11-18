@@ -20,15 +20,15 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key = True)
-    username = db.Column(db.String(255), index = True)
     firstname =db.Column(db.String(255))
     lastname =db.Column(db.String(255))
     email = db.Column(db.String(255), unique = True, index = True)
     bio = db.Column(db.String(255))
     profile_pic_path = db.Column(db.String())
     pass_secure = db.Column(db.String(255))
-    
+
     pitches = db.relationship('Pitch', backref = 'user', lazy = 'dynamic')
+    comments = db.relationship('Comment', backref = 'user', lazy = 'dynamic')
 
     @property
     def password(self):
@@ -80,6 +80,7 @@ class Pitch(db.Model):
     upvotes = db.Column(db.Integer)
     downvotes = db.Column(db.Integer)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    comments = db.relationship('Comment', backref = 'pitch', lazy = 'dynamic')
 
     def save_pitch(self):
         """
@@ -88,8 +89,34 @@ class Pitch(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    def get_comments(self):
+        """
+        Method that retrieves a pitch's comments.
+        """
+        pitch = Pitch.query.filter_by(id = self.id).first()
+        comments = Comment.query.filter_by(pitch_id = pitch.id).all()
+        return comments
+
     def __repr__(self):
         """
         Method used for debugging the database.
         """
         return f'User {self.username}'
+
+class Comment(db.Model):
+    """
+    Comment model class to create comments.
+
+    Args:
+        db.Model - connects our class to the database.
+    """
+    __tablename__ = 'comments'
+
+    id = db.Column(db.Integer, primary_key = True)
+    content = db.Column(db.String)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    pitch_id = db.Column(db.Integer, db.ForeignKey('pitches.id'))
+
+    def save_comment(self):
+        db.session.add(self)
+        db.session.commit()
