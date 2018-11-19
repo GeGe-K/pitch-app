@@ -22,6 +22,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key = True)
     firstname =db.Column(db.String(255))
     lastname =db.Column(db.String(255))
+    username = db.Column(db.String(255),index =True)
     email = db.Column(db.String(255), unique = True, index = True)
     bio = db.Column(db.String(255))
     profile_pic_path = db.Column(db.String())
@@ -89,6 +90,28 @@ class Pitch(db.Model):
         db.session.add(self)
         db.session.commit()
 
+    @classmethod
+    def get_pitches(cls,category):
+        pitches = Pitch.query.filter_by(category=category).all()
+        return pitches
+
+    @classmethod
+    def get_pitch(cls,id):
+        pitch = Pitch.query.filter_by(id=id).first()
+
+        return pitch
+
+    @classmethod
+    def count_pitches(cls,uname):
+        user = User.query.filter_by(username=uname).first()
+        pitches = Pitch.query.filter_by(user_id=user.id).all()
+
+        pitches_count = 0
+        for pitch in pitches:
+            pitches_count += 1
+
+        return pitches_count
+
     def get_comments(self):
         """
         Method that retrieves a pitch's comments.
@@ -96,12 +119,6 @@ class Pitch(db.Model):
         pitch = Pitch.query.filter_by(id = self.id).first()
         comments = Comment.query.filter_by(pitch_id = pitch.id).all()
         return comments
-
-    def __repr__(self):
-        """
-        Method used for debugging the database.
-        """
-        return f'User {self.username}'
 
 class Comment(db.Model):
     """
@@ -120,3 +137,9 @@ class Comment(db.Model):
     def save_comment(self):
         db.session.add(self)
         db.session.commit()
+
+    def __repr__(self):
+        """
+        Method used for debugging the database.
+        """
+        return f'User {self.content}'
